@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
@@ -15,6 +15,8 @@ export default function RegisterScreen() {
     password: '',
     confirmPassword: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const handleRegister = async () => {
@@ -36,7 +38,7 @@ export default function RegisterScreen() {
       });
 
       Alert.alert('Success', 'Registration successful!');
-      router.replace('./tabs/index');
+      router.replace('/');
     } catch (error) {
       console.error('Registration failed:', error);
       Alert.alert('Error', error instanceof Error ? error.message : 'An error occurred');
@@ -49,86 +51,120 @@ export default function RegisterScreen() {
         colors={['#1E1E1E', '#252525']}
         style={styles.background}
       >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.logoContainer}>
-            <View style={styles.iconWrapper}>
-              <LinearGradient
-                colors={['#2F9E44', '#40C057']}
-                style={styles.iconBackground}
-              >
-                <FontAwesome name="heartbeat" size={50} color="#FFFFFF" />
-              </LinearGradient>
-            </View>
-            <Text style={styles.title}>Join FitMix</Text>
-            <Text style={styles.subtitle}>Start Your Fitness Journey Today</Text>
-          </View>
-
-          <View style={styles.formContainer}>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor="#909090"
-                value={formData.name}
-                onChangeText={(text) => setFormData({ ...formData, name: text })}
-                autoCapitalize="words"
-              />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.logoContainer}>
+              <View style={styles.iconWrapper}>
+                <LinearGradient
+                  colors={['#2F9E44', '#40C057']}
+                  style={styles.iconBackground}
+                >
+                  <FontAwesome name="heartbeat" size={50} color="#FFFFFF" />
+                </LinearGradient>
+              </View>
+              <Text style={styles.title}>Join FitMix</Text>
+              <Text style={styles.subtitle}>Start Your Fitness Journey Today</Text>
             </View>
 
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#909090"
-                value={formData.email}
-                onChangeText={(text) => setFormData({ ...formData, email: text })}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+            <View style={styles.formContainer}>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full Name"
+                  placeholderTextColor="#909090"
+                  value={formData.name}
+                  onChangeText={(text) => setFormData({ ...formData, name: text })}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor="#909090"
+                  value={formData.email}
+                  onChangeText={(text) => setFormData({ ...formData, email: text })}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputWrapper}>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.input, styles.passwordInput]}
+                    placeholder="Password"
+                    placeholderTextColor="#909090"
+                    value={formData.password}
+                    onChangeText={(text) => setFormData({ ...formData, password: text })}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity 
+                    style={styles.eyeIcon}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <FontAwesome 
+                      name={showPassword ? "eye" : "eye-slash"} 
+                      size={20} 
+                      color="#909090" 
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.inputWrapper}>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.input, styles.passwordInput]}
+                    placeholder="Confirm Password"
+                    placeholderTextColor="#909090"
+                    value={formData.confirmPassword}
+                    onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity 
+                    style={styles.eyeIcon}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <FontAwesome 
+                      name={showConfirmPassword ? "eye" : "eye-slash"} 
+                      size={20} 
+                      color="#909090" 
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.buttonWrapper} onPress={handleRegister}>
+                <LinearGradient
+                  colors={['#2F9E44', '#40C057']}
+                  style={styles.button}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.buttonText}>Create Account</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.loginLink}
+                onPress={() => router.push('/')}>
+                <Text style={styles.loginText}>
+                  Already have an account? <Text style={styles.loginTextBold}>Login</Text>
+                </Text>
+              </TouchableOpacity>
             </View>
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#909090"
-                value={formData.password}
-                onChangeText={(text) => setFormData({ ...formData, password: text })}
-                secureTextEntry
-              />
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                placeholderTextColor="#909090"
-                value={formData.confirmPassword}
-                onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-                secureTextEntry
-              />
-            </View>
-
-            <TouchableOpacity style={styles.buttonWrapper} onPress={handleRegister}>
-              <LinearGradient
-                colors={['#2F9E44', '#40C057']}
-                style={styles.button}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.buttonText}>Create Account</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.loginLink}
-              onPress={() => router.push('./tabs/index')}>
-              <Text style={styles.loginText}>
-                Already have an account? <Text style={styles.loginTextBold}>Login</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -141,7 +177,10 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
-  scrollContainer: {
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
@@ -206,6 +245,22 @@ const styles = StyleSheet.create({
     color: '#E0E0E0',
     borderWidth: 1,
     borderColor: '#404040',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    position: 'relative',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingRight: 40,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 12,
+    height: '100%',
+    justifyContent: 'center',
   },
   buttonWrapper: {
     borderRadius: 16,

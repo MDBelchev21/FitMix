@@ -8,9 +8,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export { ErrorBoundary } from 'expo-router';
 
-export const unstable_settings = {
-  initialRouteName: 'tabs',
-};
 
 SplashScreen.preventAutoHideAsync();
 

@@ -31,6 +31,7 @@
     "expo-web-browser": "~14.0.2",
     "firebase": "^11.3.1",
     "jest-expo": "~52.0.4",
+    "moti": "^0.30.0",
     "nativewind": "^2.0.11",
     "react": "18.3.1",
     "react-dom": "18.3.1",
