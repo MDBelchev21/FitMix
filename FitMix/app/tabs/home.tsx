@@ -56,6 +56,7 @@ const MenuCard: React.FC<MenuCardProps> = ({ icon, title, description, route, gr
 
 const Header: React.FC = () => {
   const [username, setUsername] = useState<string>('');
+  const router = useRouter();
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -73,7 +74,10 @@ const Header: React.FC = () => {
         <Text style={styles.greeting}>Welcome, {username}</Text>
         <Text style={styles.date}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
       </View>
-      <TouchableOpacity style={styles.profileButton}>
+      <TouchableOpacity 
+        style={styles.profileButton}
+        onPress={() => router.push('/tabs/account-settings')}
+      >
         <FontAwesome5 name="user-circle" size={32} color="white" />
       </TouchableOpacity>
     </View>
