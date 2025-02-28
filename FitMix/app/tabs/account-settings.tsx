@@ -15,8 +15,9 @@ import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, storage } from '../config/firebase';
-import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential, signOut } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage';
 
 export default function AccountSettings() {
@@ -162,6 +163,17 @@ export default function AccountSettings() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      await AsyncStorage.removeItem('userToken');
+      router.replace('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
+    }
+  };
+
   return (
     <>
       <Stack.Screen 
@@ -174,82 +186,91 @@ export default function AccountSettings() {
           colors={['#1a1a1a', '#2a2a2a']}
           style={styles.background}
         >
-          <ScrollView style={styles.scrollView}>
-            <View style={styles.header}>
-              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <FontAwesome5 name="arrow-left" size={20} color="white" />
-              </TouchableOpacity>
-              <Text style={styles.title}>Account Settings</Text>
-            </View>
+          <View style={styles.mainContainer}>
+            <ScrollView style={styles.scrollView}>
+              <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                  <FontAwesome5 name="arrow-left" size={20} color="white" />
+                </TouchableOpacity>
+                <Text style={styles.title}>Account Settings</Text>
+              </View>
 
-            <View style={styles.profileSection}>
-              <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
-                {profileImage ? (
-                  <Image source={{ uri: profileImage }} style={styles.profileImage} />
-                ) : (
-                  <View style={styles.placeholderImage}>
-                    <FontAwesome5 name="user" size={40} color="#666" />
+              <View style={styles.profileSection}>
+                <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
+                  {profileImage ? (
+                    <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                  ) : (
+                    <View style={styles.placeholderImage}>
+                      <FontAwesome5 name="user" size={40} color="#666" />
+                    </View>
+                  )}
+                  <View style={styles.editIconContainer}>
+                    <FontAwesome5 name="camera" size={16} color="white" />
                   </View>
-                )}
-                <View style={styles.editIconContainer}>
-                  <FontAwesome5 name="camera" size={16} color="white" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Profile Information</Text>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Username</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder="Enter username"
+                    placeholderTextColor="#666"
+                  />
+                  <TouchableOpacity onPress={updateUsername} style={styles.button}>
+                    <Text style={styles.buttonText}>Update Username</Text>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Profile Information</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Username</Text>
-                <TextInput
-                  style={styles.input}
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder="Enter username"
-                  placeholderTextColor="#666"
-                />
-                <TouchableOpacity onPress={updateUsername} style={styles.button}>
-                  <Text style={styles.buttonText}>Update Username</Text>
-                </TouchableOpacity>
               </View>
-            </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Change Password</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Current Password</Text>
-                <TextInput
-                  style={styles.input}
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                  secureTextEntry
-                  placeholder="Enter current password"
-                  placeholderTextColor="#666"
-                />
-                <Text style={styles.label}>New Password</Text>
-                <TextInput
-                  style={styles.input}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  secureTextEntry
-                  placeholder="Enter new password"
-                  placeholderTextColor="#666"
-                />
-                <Text style={styles.label}>Confirm New Password</Text>
-                <TextInput
-                  style={styles.input}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  placeholder="Confirm new password"
-                  placeholderTextColor="#666"
-                />
-                <TouchableOpacity onPress={handlePasswordChange} style={styles.button}>
-                  <Text style={styles.buttonText}>Update Password</Text>
-                </TouchableOpacity>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Change Password</Text>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Current Password</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    secureTextEntry
+                    placeholder="Enter current password"
+                    placeholderTextColor="#666"
+                  />
+                  <Text style={styles.label}>New Password</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    secureTextEntry
+                    placeholder="Enter new password"
+                    placeholderTextColor="#666"
+                  />
+                  <Text style={styles.label}>Confirm New Password</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    placeholder="Confirm new password"
+                    placeholderTextColor="#666"
+                  />
+                  <TouchableOpacity onPress={handlePasswordChange} style={styles.button}>
+                    <Text style={styles.buttonText}>Update Password</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          </ScrollView>
+            </ScrollView>
+
+            <TouchableOpacity 
+              onPress={handleSignOut} 
+              style={[styles.button, styles.signOutButton]}
+            >
+              <Text style={[styles.buttonText, styles.signOutButtonText]}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
         </LinearGradient>
       </SafeAreaView>
     </>
@@ -263,6 +284,11 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
+  },
+  mainContainer: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
   },
   scrollView: {
     flex: 1,
@@ -369,14 +395,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4A90E2',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 15,
   },
   buttonText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  signOutButton: {
+    backgroundColor: '#FF3B30',
+    margin: 20,
+    marginBottom: Platform.OS === 'ios' ? 0 : 20,
+  },
+  signOutButtonText: {
+    color: 'white',
   },
 });
