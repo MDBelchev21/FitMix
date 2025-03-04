@@ -66,47 +66,36 @@ export default function AccountSettings() {
       const user = auth.currentUser;
       if (!user) return;
 
-      // Get the file extension and create a unique filename
       const extension = uri.split('.').pop()?.toLowerCase() || 'jpg';
       const filename = `${user.uid}_${Date.now()}.${extension}`;
 
-      // Create a reference to the storage location
       const imageRef = ref(storage, `profile_images/${filename}`);
 
-      // Convert image to base64
       const response = await fetch(uri);
       const blob = await response.blob();
       
-      // Create a FileReader to read the blob as base64
       const reader = new FileReader();
       
-      // Create a promise to handle the FileReader
       const base64Promise = new Promise((resolve, reject) => {
         reader.onload = () => resolve(reader.result);
         reader.onerror = (error) => reject(error);
       });
       
-      // Read the blob as base64
       reader.readAsDataURL(blob);
       
-      // Wait for the base64 data
       const base64Data = await base64Promise;
       
-      // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
       const base64String = String(base64Data).split(',')[1];
 
-      // Upload the base64 string
       console.log('Starting upload...');
       await uploadString(imageRef, base64String, 'base64', {
         contentType: `image/${extension}`
       });
       console.log('Upload completed');
 
-      // Get the download URL
       const downloadURL = await getDownloadURL(imageRef);
       console.log('Download URL obtained:', downloadURL);
 
-      // Update user profile
       await updateProfile(user, {
         photoURL: downloadURL,
       });
@@ -189,7 +178,7 @@ export default function AccountSettings() {
           <View style={styles.mainContainer}>
             <ScrollView style={styles.scrollView}>
               <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <TouchableOpacity onPress={() => router.push('/tabs/home')} style={styles.backButton}>
                   <FontAwesome5 name="arrow-left" size={20} color="white" />
                 </TouchableOpacity>
                 <Text style={styles.title}>Account Settings</Text>

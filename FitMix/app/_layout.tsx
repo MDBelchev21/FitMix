@@ -8,7 +8,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export { ErrorBoundary } from 'expo-router';
 
-
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
