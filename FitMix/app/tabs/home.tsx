@@ -63,7 +63,6 @@ const Header: React.FC = () => {
     if (user?.displayName) {
       setUsername(user.displayName);
     } else if (user?.email) {
-      // If no display name, use the part of email before @
       setUsername(user.email.split('@')[0]);
     }
   }, []);

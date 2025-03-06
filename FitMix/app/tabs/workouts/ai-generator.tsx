@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { workoutsService } from '../../services/workouts';
+import { geminiService } from '../../services/gemini';
 
 type Goal = 'muscle-gain' | 'weight-loss' | 'strength' | 'endurance';
 
@@ -22,16 +23,20 @@ export default function AIGenerator() {
     try {
       setGenerating(true);
       
-      // TODO: Replace with actual AI-generated exercises based on goals
-      const exercises = [
-        { name: 'Push-ups', sets: '3', reps: '12' },
-        { name: 'Squats', sets: '3', reps: '15' },
-        { name: 'Plank', sets: '3', reps: '30s' },
-      ];
+      const days = await geminiService.generateWorkoutProgram(
+        goal,
+        experience,
+        daysPerWeek
+      );
+
+      if (!days || !Array.isArray(days) || days.length === 0) {
+        Alert.alert('Error', 'Failed to generate workout program. Please try again.');
+        return;
+      }
 
       await workoutsService.createProgram({
         name: `${goal.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Program`,
-        exercises,
+        days,
         type: 'ai',
         createdAt: new Date().toISOString(),
       });
@@ -42,7 +47,7 @@ export default function AIGenerator() {
       });
     } catch (error) {
       console.error('Error generating program:', error);
-      Alert.alert('Error', 'Failed to generate workout program');
+      Alert.alert('Error', 'Failed to generate workout program. Please try again.');
     } finally {
       setGenerating(false);
     }

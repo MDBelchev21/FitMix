@@ -103,7 +103,7 @@ export default function WorkoutsScreen() {
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{program.name}</Text>
                 <Text style={styles.cardDescription}>
-                  {program.exercises.length} exercises
+                  {program.days?.length || 0} days
                 </Text>
               </View>
               <TouchableOpacity 
