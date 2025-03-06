@@ -8,15 +8,26 @@ import { workoutsService, Exercise } from '../../services/workouts';
 
 export default function CreateWorkout() {
   const [programName, setProgramName] = useState('');
-  const [exercises, setExercises] = useState<Exercise[]>([{ name: '', sets: '', reps: '' }]);
+  const [exercises, setExercises] = useState<Exercise[]>([{ name: '', sets: 0, reps: 0, description: '' }]);
 
   const addExercise = () => {
-    setExercises([...exercises, { name: '', sets: '', reps: '' }]);
+    setExercises([...exercises, { name: '', sets: 0, reps: 0, description: '' }]);
   };
 
   const updateExercise = (index: number, field: keyof Exercise, value: string) => {
     const updatedExercises = [...exercises];
-    updatedExercises[index] = { ...updatedExercises[index], [field]: value };
+    if (field === 'sets' || field === 'reps') {
+      const numValue = Math.max(0, parseInt(value) || 0);
+      updatedExercises[index] = { 
+        ...updatedExercises[index], 
+        [field]: numValue
+      };
+    } else {
+      updatedExercises[index] = {
+        ...updatedExercises[index], 
+        [field]: value 
+      };
+    }
     setExercises(updatedExercises);
   };
 
@@ -31,17 +42,43 @@ export default function CreateWorkout() {
         return;
       }
 
-      if (exercises.some(ex => !ex.name.trim() || !ex.sets.trim() || !ex.reps.trim())) {
-        Alert.alert('Error', 'Please fill in all exercise details');
+      // More detailed validation
+      const invalidExercises = exercises.filter(ex => 
+        !ex.name.trim() || 
+        typeof ex.sets !== 'number' || 
+        ex.sets <= 0 ||
+        typeof ex.reps !== 'number' || 
+        ex.reps <= 0 ||
+        !ex.description?.trim()
+      );
+
+      if (invalidExercises.length > 0) {
+        Alert.alert('Error', 'Please ensure all exercises have a name, description, and valid numbers for sets and reps (greater than 0)');
         return;
       }
 
-      await workoutsService.createProgram({
+      const programData = {
         name: programName,
-        exercises,
-        type: 'custom',
+        days: [
+          {
+            day: 1,
+            exercises: exercises.map(ex => ({
+              name: ex.name.trim(),
+              sets: ex.sets,
+              reps: ex.reps,
+              description: ex.description.trim(),
+              weight: 0
+            })),
+            completed: false
+          }
+        ],
+        type: 'custom' as const,
         createdAt: new Date().toISOString(),
-      });
+        currentDay: 1,
+        lastWorkout: undefined
+      };
+
+      await workoutsService.createProgram(programData);
 
       router.push({
         pathname: '/tabs/workouts',
@@ -104,7 +141,7 @@ export default function CreateWorkout() {
                     <Text style={styles.detailLabel}>Sets</Text>
                     <TextInput
                       style={styles.numberInput}
-                      value={exercise.sets}
+                      value={exercise.sets.toString()}
                       onChangeText={(text) => updateExercise(index, 'sets', text)}
                       keyboardType="numeric"
                       placeholderTextColor="#666"
@@ -114,9 +151,18 @@ export default function CreateWorkout() {
                     <Text style={styles.detailLabel}>Reps</Text>
                     <TextInput
                       style={styles.numberInput}
-                      value={exercise.reps}
+                      value={exercise.reps.toString()}
                       onChangeText={(text) => updateExercise(index, 'reps', text)}
                       keyboardType="numeric"
+                      placeholderTextColor="#666"
+                    />
+                  </View>
+                  <View style={styles.detailInput}>
+                    <Text style={styles.detailLabel}>Description</Text>
+                    <TextInput
+                      style={styles.numberInput}
+                      value={exercise.description}
+                      onChangeText={(text) => updateExercise(index, 'description', text)}
                       placeholderTextColor="#666"
                     />
                   </View>
@@ -128,31 +174,15 @@ export default function CreateWorkout() {
             ))}
 
             <TouchableOpacity style={styles.addButton} onPress={addExercise}>
-              <LinearGradient
-                colors={['#FF4B4B', '#FF6B6B']}
-                style={styles.addButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <FontAwesome5 name="plus" size={20} color="white" />
-                <Text style={styles.buttonText}>Add Exercise</Text>
-              </LinearGradient>
+              <FontAwesome5 name="plus" size={20} color="#FFFFFF" />
+              <Text style={styles.addButtonText}>Add Exercise</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.saveButton} onPress={saveProgram}>
+              <Text style={styles.saveButtonText}>Save Program</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.saveButton} onPress={saveProgram}>
-            <LinearGradient
-              colors={['#4CAF50', '#45A049']}
-              style={styles.saveButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Text style={styles.buttonText}>Save Program</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -238,29 +268,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     marginTop: 10,
-  },
-  addButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
-    gap: 10,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#333',
   },
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#333',
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 10,
   },
   saveButton: {
     borderRadius: 8,
     overflow: 'hidden',
-  },
-  saveButtonGradient: {
-    padding: 15,
+    marginTop: 10,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    backgroundColor: '#4CAF50',
   },
-  buttonText: {
-    color: 'white',
+  saveButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
