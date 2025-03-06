@@ -183,39 +183,10 @@ export default function WorkoutDetails() {
                 <View style={styles.workoutContainer}>
                   <View style={styles.workoutHeader}>
                     <Text style={styles.dayTitle}>Day {selectedDay} Workout</Text>
-                    {!activeWorkout ? (
-                      <TouchableOpacity
-                        style={styles.startButton}
-                        onPress={startWorkout}
-                      >
-                        <LinearGradient
-                          colors={['#4CAF50', '#45A049']}
-                          style={styles.startButtonGradient}
-                        >
-                          <FontAwesome5 name="play" size={16} color="#FFFFFF" />
-                          <Text style={styles.startButtonText}>Start Workout</Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.finishButton}
-                        onPress={finishWorkout}
-                      >
-                        <LinearGradient
-                          colors={['#4CAF50', '#45A049']}
-                          style={styles.startButtonGradient}
-                        >
-                          <FontAwesome5 name="check" size={16} color="#FFFFFF" />
-                          <Text style={styles.startButtonText}>Finish Workout</Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    )}
                   </View>
-                  <View style={styles.exercisesContainer}>
-                    {program.days[selectedDay - 1].exercises.map((exercise, index) => 
-                      renderExercise(exercise, index)
-                    )}
-                  </View>
+                  {program.days?.[selectedDay - 1]?.exercises?.map((exercise, index) => 
+                    renderExercise(exercise, index)
+                  )}
                 </View>
               )}
             </>
@@ -223,6 +194,38 @@ export default function WorkoutDetails() {
             <Text style={styles.errorText}>Program not found</Text>
           )}
         </ScrollView>
+
+        {selectedDay && !loading && program && (
+          <View style={styles.bottomButtonContainer}>
+            {!activeWorkout ? (
+              <TouchableOpacity
+                style={styles.startButton}
+                onPress={startWorkout}
+              >
+                <LinearGradient
+                  colors={['#4CAF50', '#45A049']}
+                  style={styles.startButtonGradient}
+                >
+                  <FontAwesome5 name="play" size={16} color="#FFFFFF" />
+                  <Text style={styles.startButtonText}>Start Workout</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.finishButton}
+                onPress={finishWorkout}
+              >
+                <LinearGradient
+                  colors={['#FF4B4B', '#FF6B6B']}
+                  style={styles.finishButtonGradient}
+                >
+                  <FontAwesome5 name="check" size={16} color="#FFFFFF" />
+                  <Text style={styles.finishButtonText}>Finish Workout</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </LinearGradient>
     </SafeAreaView>
   );
@@ -316,21 +319,45 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
-  startButton: {
-    borderRadius: 25,
-    overflow: 'hidden',
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
-  finishButton: {
-    borderRadius: 25,
-    overflow: 'hidden',
+  startButton: {
+    width: '100%',
+    maxWidth: 200,
   },
   startButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 25,
+    gap: 8,
+  },
+  finishButton: {
+    width: '100%',
+    maxWidth: 200,
+  },
+  finishButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 25,
+    gap: 8,
   },
   startButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  finishButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',

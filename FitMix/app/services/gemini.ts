@@ -40,6 +40,7 @@ Respond ONLY with the JSON array, no additional text or formatting.`;
         .trim();
       
       try {
+        console.log('Raw Gemini response:', text);
         const days = JSON.parse(text) as WorkoutDay[];
         
         if (!Array.isArray(days)) {
@@ -47,27 +48,57 @@ Respond ONLY with the JSON array, no additional text or formatting.`;
           return [];
         }
 
-        const validDays = days.every(day => 
-          typeof day === 'object' &&
-          typeof day.day === 'number' &&
-          Array.isArray(day.exercises) &&
-          day.exercises.every(ex => 
-            typeof ex === 'object' &&
-            typeof ex.name === 'string' &&
-            typeof ex.sets === 'number' &&
-            typeof ex.reps === 'number' &&
-            typeof ex.description === 'string'
-          )
-        );
-
-        if (!validDays) {
-          console.error('Invalid day format in response');
-          return [];
+        for (let i = 0; i < days.length; i++) {
+          const day = days[i];
+          
+          if (typeof day !== 'object') {
+            console.error(`Day ${i} is not an object:`, day);
+            return [];
+          }
+          
+          if (typeof day.day !== 'number' || day.day < 1 || day.day > parseInt(daysPerWeek)) {
+            console.error(`Day ${i} has invalid day number (must be 1-${daysPerWeek}):`, day.day);
+            return [];
+          }
+          
+          if (!Array.isArray(day.exercises)) {
+            console.error(`Day ${i} has invalid exercises property:`, day.exercises);
+            return [];
+          }
+          
+          for (let j = 0; j < day.exercises.length; j++) {
+            const ex = day.exercises[j];
+            if (!ex || typeof ex !== 'object') {
+              console.error(`Exercise ${j} in day ${i} is invalid:`, ex);
+              return [];
+            }
+            
+            if (typeof ex.name !== 'string') {
+              console.error(`Exercise ${j} in day ${i} has invalid name:`, ex.name);
+              return [];
+            }
+            
+            if (typeof ex.sets !== 'number' || ex.sets < 2 || ex.sets > 5) {
+              console.error(`Exercise ${j} in day ${i} has invalid sets (must be 2-5):`, ex.sets);
+              return [];
+            }
+            
+            if (typeof ex.reps !== 'number' || ex.reps < 6 || ex.reps > 15) {
+              console.error(`Exercise ${j} in day ${i} has invalid reps (must be 6-15):`, ex.reps);
+              return [];
+            }
+            
+            if (typeof ex.description !== 'string') {
+              console.error(`Exercise ${j} in day ${i} has invalid description:`, ex.description);
+              return [];
+            }
+          }
         }
 
         return days;
       } catch (error) {
-        console.error('Failed to parse Gemini response:', text);
+        console.error('Failed to parse Gemini response:', error);
+        console.error('Raw text:', text);
         return [];
       }
     } catch (error) {
