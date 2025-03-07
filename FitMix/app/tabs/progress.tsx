@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-<<<<<<< HEAD
 import { View, StyleSheet, Text, ActivityIndicator, ViewStyle } from 'react-native';
 import { Stack } from 'expo-router';
 import { progressService, WorkoutProgress } from '../services/progressService';
@@ -13,15 +12,6 @@ interface MuscleGroupProps {
 // Muscle group components
 const MuscleGroup: React.FC<MuscleGroupProps> = ({ name, progress, style }) => {
   const getProgressColor = (value: number) => {
-=======
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
-import { Stack } from 'expo-router';
-import { progressService, WorkoutProgress } from '../services/progressService';
-
-// Muscle group components
-const MuscleGroup = ({ name, progress, style }) => {
-  const getProgressColor = (value) => {
->>>>>>> 931067cc11b0f87170b6b8f02051c37569c59eae
     if (value >= 80) return '#4CAF50';
     if (value >= 60) return '#8BC34A';
     if (value >= 40) return '#FFEB3B';

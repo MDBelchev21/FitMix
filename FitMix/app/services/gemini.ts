@@ -59,10 +59,7 @@ Respond ONLY with the JSON array, no additional text or formatting.`;
   },
 
   async generateSingleDayWorkout(goal: string, experience: string, maxAttempts = 5) {
-<<<<<<< HEAD
     const genAI = await this.initializeClient();
-=======
->>>>>>> 931067cc11b0f87170b6b8f02051c37569c59eae
     const model = genAI.getGenerativeModel({ model: geminiConfig.model });
     
     const prompt = `Generate a single day workout for ${experience} level, goal: ${goal}.
@@ -105,7 +102,6 @@ Respond ONLY with the JSON array, no additional text or formatting.`;
       console.error('Error generating workout:', error);
       return [];
     }
-<<<<<<< HEAD
   },
 
   async generateMealSuggestion(ingredients: string) {
@@ -169,7 +165,5 @@ Respond ONLY with the JSON object, no additional text.`;
       console.error('Error generating recipe:', error);
       throw error;
     }
-=======
->>>>>>> 931067cc11b0f87170b6b8f02051c37569c59eae
   }
 };
