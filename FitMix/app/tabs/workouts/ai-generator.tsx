@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { workoutsService } from '../../services/workouts';
 import { geminiService } from '../../services/gemini';
+import { useTranslation } from '../../context/TranslationContext';
+import { useTheme } from '../../context/ThemeContext';
 
 type Goal = 'muscle-gain' | 'weight-loss' | 'strength' | 'endurance';
 
@@ -15,9 +17,30 @@ export default function AIGenerator() {
   const [experience, setExperience] = useState('beginner');
   const [daysPerWeek, setDaysPerWeek] = useState('3');
   const [generating, setGenerating] = useState(false);
+  const { t } = useTranslation();
+  const { isDarkMode } = useTheme();
+
 
   const goals: Goal[] = ['muscle-gain', 'weight-loss', 'strength', 'endurance'];
   const experienceLevels = ['beginner', 'intermediate', 'advanced'];
+
+  const getGoalTranslation = (g: Goal) => {
+    switch(g) {
+      case 'muscle-gain': return t.muscleGain;
+      case 'weight-loss': return t.weightLoss;
+      case 'strength': return t.strength;
+      case 'endurance': return t.endurance;
+    }
+  };
+
+  const getExperienceTranslation = (level: string) => {
+    switch(level) {
+      case 'beginner': return t.beginner;
+      case 'intermediate': return t.intermediate;
+      case 'advanced': return t.advanced;
+      default: return level;
+    }
+  };
 
   const generateProgram = async () => {
     try {
@@ -30,12 +53,12 @@ export default function AIGenerator() {
       );
 
       if (!days || !Array.isArray(days) || days.length === 0) {
-        Alert.alert('Error', 'Failed to generate workout program. Please try again.');
+        Alert.alert(t.error, t.failedToGenerateProgram);
         return;
       }
 
       await workoutsService.createProgram({
-        name: `${goal.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Program`,
+        name: `${getGoalTranslation(goal)} ${t.program}`,
         days,
         type: 'ai',
         createdAt: new Date().toISOString(),
@@ -47,16 +70,16 @@ export default function AIGenerator() {
       });
     } catch (error) {
       console.error('Error generating program:', error);
-      Alert.alert('Error', 'Failed to generate workout program. Please try again.');
+      Alert.alert(t.error, t.failedToGenerateProgram);
     } finally {
       setGenerating(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isDarkMode ? styles.darkMode : styles.lightMode]}>
       <LinearGradient
-        colors={['#000000', '#000000']}
+        colors={isDarkMode ? ['#1a1a1a', '#2a2a2a'] : ['#ffffff', '#f5f5f5']}
         style={styles.background}
       >
         <Stack.Screen
@@ -73,11 +96,13 @@ export default function AIGenerator() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <FontAwesome5 name="arrow-left" size={20} color="#FFFFFF" />
+            <FontAwesome5 name="arrow-left" size={20} color={isDarkMode ? "#FFFFFF" : "#000000"} />
           </TouchableOpacity>
 
-          <Text style={styles.title}>AI Workout Generator</Text>
-          <Text style={styles.subtitle}>Let AI create a personalized workout program for you</Text>
+          <Text style={[styles.title, isDarkMode ? styles.textLight : styles.textDark]}>{t.aiWorkoutGenerator}</Text>
+          <Text style={[styles.subtitle, isDarkMode ? styles.textLightSecondary : styles.textDarkSecondary]}>
+            {t.letAICreateWorkoutProgram}
+          </Text>
 
           <View style={styles.form}>
             <MotiView
@@ -85,7 +110,7 @@ export default function AIGenerator() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 100 }}
             >
-              <Text style={styles.sectionTitle}>What's your goal?</Text>
+              <Text style={[styles.sectionTitle, isDarkMode ? styles.textLight : styles.textDark]}>{t.whatsYourGoal}</Text>
               <View style={styles.goalButtons}>
                 {goals.map((g) => (
                   <TouchableOpacity
@@ -93,7 +118,7 @@ export default function AIGenerator() {
                     style={[styles.goalButton]}
                     onPress={() => setGoal(g)}>
                     <LinearGradient
-                      colors={goal === g ? ['#4B7BFF', '#3461D9'] : ['#1A1A1A', '#1A1A1A']}
+                      colors={goal === g ? ['#4B7BFF', '#3461D9'] : isDarkMode ? ['#1A1A1A', '#1A1A1A'] : ['#f0f0f0', '#f0f0f0']}
                       style={styles.goalButtonGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
@@ -105,11 +130,15 @@ export default function AIGenerator() {
                           g === 'strength' ? 'fist-raised' : 'running'
                         } 
                         size={24} 
-                        color={goal === g ? '#FFFFFF' : '#666666'} 
+                        color={goal === g ? '#FFFFFF' : isDarkMode ? '#666666' : '#333333'} 
                         style={styles.goalIcon}
                       />
-                      <Text style={[styles.goalButtonText, goal === g && styles.goalButtonTextActive]}>
-                        {g.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      <Text style={[
+                        styles.goalButtonText, 
+                        goal === g && styles.goalButtonTextActive,
+                        goal !== g && (isDarkMode ? styles.textLightSecondary : styles.textDarkSecondary)
+                      ]}>
+                        {getGoalTranslation(g)}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -122,7 +151,7 @@ export default function AIGenerator() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 200 }}
             >
-              <Text style={styles.sectionTitle}>Experience Level</Text>
+              <Text style={[styles.sectionTitle, isDarkMode ? styles.textLight : styles.textDark]}>{t.experienceLevel}</Text>
               <View style={styles.experienceButtons}>
                 {experienceLevels.map((level) => (
                   <TouchableOpacity
@@ -130,13 +159,17 @@ export default function AIGenerator() {
                     style={[styles.experienceButton]}
                     onPress={() => setExperience(level)}>
                     <LinearGradient
-                      colors={experience === level ? ['#4B7BFF', '#3461D9'] : ['#1A1A1A', '#1A1A1A']}
+                      colors={experience === level ? ['#4B7BFF', '#3461D9'] : isDarkMode ? ['#1A1A1A', '#1A1A1A'] : ['#f0f0f0', '#f0f0f0']}
                       style={styles.experienceButtonGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
-                      <Text style={[styles.experienceButtonText, experience === level && styles.experienceButtonTextActive]}>
-                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      <Text style={[
+                        styles.experienceButtonText, 
+                        experience === level && styles.experienceButtonTextActive,
+                        experience !== level && (isDarkMode ? styles.textLightSecondary : styles.textDarkSecondary)
+                      ]}>
+                        {getExperienceTranslation(level)}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -149,7 +182,7 @@ export default function AIGenerator() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 300 }}
             >
-              <Text style={styles.sectionTitle}>Days per Week</Text>
+              <Text style={[styles.sectionTitle, isDarkMode ? styles.textLight : styles.textDark]}>{t.daysPerWeek}</Text>
               <View style={styles.daysContainer}>
                 {[2,3,4,5,6].map((day) => (
                   <TouchableOpacity
@@ -157,12 +190,16 @@ export default function AIGenerator() {
                     style={[styles.dayButton]}
                     onPress={() => setDaysPerWeek(day.toString())}>
                     <LinearGradient
-                      colors={parseInt(daysPerWeek) === day ? ['#4B7BFF', '#3461D9'] : ['#1A1A1A', '#1A1A1A']}
+                      colors={parseInt(daysPerWeek) === day ? ['#4B7BFF', '#3461D9'] : isDarkMode ? ['#1A1A1A', '#1A1A1A'] : ['#f0f0f0', '#f0f0f0']}
                       style={styles.dayButtonGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
-                      <Text style={styles.dayButtonText}>
+                      <Text style={[
+                        styles.dayButtonText,
+                        parseInt(daysPerWeek) === day && styles.dayButtonTextActive,
+                        parseInt(daysPerWeek) !== day && (isDarkMode ? styles.textLightSecondary : styles.textDarkSecondary)
+                      ]}>
                         {day}
                       </Text>
                     </LinearGradient>
@@ -173,7 +210,7 @@ export default function AIGenerator() {
           </View>
         </ScrollView>
 
-        <View style={styles.footer}>
+        <View style={[styles.footer, isDarkMode ? styles.darkBorder : styles.lightBorder]}>
           <TouchableOpacity style={styles.generateButton} onPress={generateProgram} disabled={generating}>
             <LinearGradient
               colors={['#4B7BFF', '#3461D9']}
@@ -182,11 +219,11 @@ export default function AIGenerator() {
               end={{ x: 1, y: 1 }}
             >
               {generating ? (
-                <Text style={styles.buttonText}>Generating...</Text>
+                <Text style={styles.buttonText}>{t.generatingProgram}</Text>
               ) : (
                 <>
                   <FontAwesome5 name="robot" size={20} color="white" />
-                  <Text style={styles.buttonText}>Generate Program</Text>
+                  <Text style={styles.buttonText}>{t.generateProgram}</Text>
                 </>
               )}
             </LinearGradient>
@@ -200,7 +237,12 @@ export default function AIGenerator() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  darkMode: {
     backgroundColor: '#000000',
+  },
+  lightMode: {
+    backgroundColor: '#ffffff',
   },
   background: {
     flex: 1,
@@ -219,12 +261,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666',
     marginBottom: 30,
   },
   form: {
@@ -233,7 +273,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
     marginBottom: 15,
   },
   goalButtons: {
@@ -258,7 +297,6 @@ const styles = StyleSheet.create({
   },
   goalButtonText: {
     fontSize: 14,
-    color: '#666666',
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -280,7 +318,6 @@ const styles = StyleSheet.create({
   },
   experienceButtonText: {
     fontSize: 14,
-    color: '#666666',
     fontWeight: '600',
   },
   experienceButtonTextActive: {
@@ -301,13 +338,20 @@ const styles = StyleSheet.create({
   },
   dayButtonText: {
     fontSize: 16,
-    color: '#666666',
     fontWeight: '600',
+  },
+  dayButtonTextActive: {
+    color: '#FFFFFF',
   },
   footer: {
     padding: 20,
     borderTopWidth: 1,
+  },
+  darkBorder: {
     borderTopColor: '#333333',
+  },
+  lightBorder: {
+    borderTopColor: '#e0e0e0',
   },
   generateButton: {
     borderRadius: 12,
@@ -324,5 +368,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  textLight: {
+    color: '#FFFFFF',
+  },
+  textDark: {
+    color: '#000000',
+  },
+  textLightSecondary: {
+    color: '#666666',
+  },
+  textDarkSecondary: {
+    color: '#666666',
   },
 });

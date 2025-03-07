@@ -1,4 +1,9 @@
+<<<<<<< HEAD
+import { collection, getDocs } from 'firebase/firestore';
+import { db, auth } from '../config/firebase';
+=======
 import firestore from '@react-native-firebase/firestore';
+>>>>>>> 931067cc11b0f87170b6b8f02051c37569c59eae
 
 export interface MuscleProgress {
   muscle: string;
@@ -15,11 +20,19 @@ export interface WorkoutProgress {
 export const progressService = {
   async calculateProgress(): Promise<WorkoutProgress> {
     try {
+<<<<<<< HEAD
+      const user = auth.currentUser;
+      if (!user) throw new Error('User must be logged in to fetch progress');
+
+      // Fetch completed workouts from Firebase
+      const workoutsSnapshot = await getDocs(collection(db, 'completed_workouts'));
+=======
       // Fetch completed workouts from Firebase
       const workoutsSnapshot = await firestore()
         .collection('completed_workouts')
         .get();
 
+>>>>>>> 931067cc11b0f87170b6b8f02051c37569c59eae
       const workouts = workoutsSnapshot.docs.map(doc => doc.data());
 
       // Initialize progress tracking

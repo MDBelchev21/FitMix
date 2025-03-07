@@ -6,6 +6,8 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { auth } from '../config/firebase';
+import { useTranslation } from '../context/TranslationContext';
+import { useTheme } from '../context/ThemeContext';
 
 type AppRoute = './workouts' | './progress' | './nutrition' | './community' | './settings';
 
@@ -57,6 +59,8 @@ const MenuCard: React.FC<MenuCardProps> = ({ icon, title, description, route, gr
 const Header: React.FC = () => {
   const [username, setUsername] = useState<string>('');
   const router = useRouter();
+  const { t } = useTranslation();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -70,14 +74,14 @@ const Header: React.FC = () => {
   return (
     <View style={styles.header}>
       <View>
-        <Text style={styles.greeting}>Welcome, {username}</Text>
-        <Text style={styles.date}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
+        <Text style={[styles.greeting, { color: theme.colors.textPrimary }]}>{t.welcome}, {username}</Text>
+        <Text style={[styles.date, { color: theme.colors.textSecondary }]}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
       </View>
       <TouchableOpacity 
         style={styles.profileButton}
         onPress={() => router.push('/tabs/account-settings')}
       >
-        <FontAwesome5 name="user-circle" size={32} color="white" />
+        <FontAwesome5 name="user-circle" size={32} color={theme.colors.textPrimary} />
       </TouchableOpacity>
     </View>
   );
@@ -85,49 +89,51 @@ const Header: React.FC = () => {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const { theme } = useTheme();
 
   const menuItems: Array<MenuCardProps> = [
     {
       icon: 'dumbbell',
-      title: 'Workouts',
-      description: 'Customized workouts based on your goals',
+      title: t.workouts,
+      description: t.workoutsDesc,
       route: './workouts',
       gradient: ['#7CB9E8', '#72A0C1'],
     },
     {
       icon: 'chart-line',
-      title: 'Progress',
-      description: 'Track your fitness journey',
+      title: t.progress,
+      description: t.progressDesc,
       route: './progress',
       gradient: ['#98FB98', '#90EE90'],
     },
     {
       icon: 'apple-alt',
-      title: 'Nutrition',
-      description: 'Meal plans and nutrition tracking',
+      title: t.nutrition,
+      description: t.nutritionDesc,
       route: './nutrition',
       gradient: ['#FFB6C1', '#FFA07A'],
     },
     {
       icon: 'users',
-      title: 'Community',
-      description: 'Connect with fitness enthusiasts',
+      title: t.community,
+      description: t.communityDesc,
       route: './community',
       gradient: ['#DDA0DD', '#D8BFD8'],
     },
     {
       icon: 'cog',
-      title: 'Settings',
-      description: 'Customize your experience',
+      title: t.settings,
+      description: t.settingsDesc,
       route: './settings',
       gradient: ['#B0C4DE', '#A9B2C3'],
     },
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <LinearGradient
-        colors={['#000000', '#000000']}
+        colors={[theme.colors.background, theme.colors.background]}
         style={styles.background}
       >
         <ScrollView 
@@ -149,11 +155,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   background: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -169,12 +173,9 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
   },
   date: {
     fontSize: 16,
-    color: '#AAAAAA',
   },
   profileButton: {
     padding: 8,
@@ -183,6 +184,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   cardContainer: {
+    height: 100,
     borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: {
@@ -194,10 +196,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   card: {
+    height: '100%',
     borderRadius: 16,
     overflow: 'hidden',
   },
   cardInner: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
@@ -220,15 +224,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#555',
   },
   chevron: {
     opacity: 0.6,
-    color: '#333',
   },
 });

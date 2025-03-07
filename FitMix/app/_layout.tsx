@@ -1,10 +1,12 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TranslationProvider } from './context/TranslationContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -48,11 +50,15 @@ function RootLayoutNav() {
   }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="tabs" options={{ headerShown: false }} />
-        <Stack.Screen name="register" options={{ headerShown: false, presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <TranslationProvider>
+      <ThemeProvider>
+        <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="tabs" options={{ headerShown: false }} />
+            <Stack.Screen name="register" options={{ headerShown: false, presentation: 'modal' }} />
+          </Stack>
+        </NavigationThemeProvider>
+      </ThemeProvider>
+    </TranslationProvider>
   );
 }

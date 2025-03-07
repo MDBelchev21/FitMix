@@ -1,70 +1,100 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Alert, Platform } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { workoutsService, Program } from '../services/workouts';
+import { useTranslation } from '../context/TranslationContext';
+import { useTheme } from '../context/ThemeContext';
+import { auth } from '../config/firebase';
 
 export default function WorkoutsScreen() {
   const { refresh } = useLocalSearchParams();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
+  const { isDarkMode } = useTheme();
 
   const loadPrograms = async () => {
     try {
       setLoading(true);
+      setError(null);
+
+      const user = auth.currentUser;
+      if (!user) {
+        router.replace('/');
+        return;
+      }
+
       const userPrograms = await workoutsService.getUserPrograms();
       setPrograms(userPrograms);
     } catch (error) {
       console.error('Error loading programs:', error);
-      Alert.alert('Error', 'Failed to load workout programs');
+      setError(t.failedToLoadWorkoutPrograms);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (!user) {
+        router.replace('/');
+      }
+    });
+
     loadPrograms();
+    return () => unsubscribe();
   }, [refresh]);
 
   const handleCreatePress = () => {
+    if (!auth.currentUser) {
+      router.replace('/');
+      return;
+    }
     router.push('/tabs/workouts/create');
   };
 
   const handleAIGeneratorPress = () => {
+    if (!auth.currentUser) {
+      router.replace('/');
+      return;
+    }
     router.push('/tabs/workouts/ai-generator');
   };
 
   const deleteProgram = async (programId: string) => {
-    try {
-      Alert.alert(
-        "Delete Workout",
-        "Are you sure you want to delete this workout program?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel"
-          },
-          {
-            text: "Delete",
-            onPress: async () => {
-              try {
-                await workoutsService.deleteProgram(programId);
-                setPrograms(programs.filter(p => p.id !== programId));
-              } catch (error) {
-                console.error('Error deleting program:', error);
-                Alert.alert('Error', 'Failed to delete workout program');
-              }
-            },
-            style: 'destructive'
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('Error showing delete dialog:', error);
+    if (!auth.currentUser) {
+      router.replace('/');
+      return;
     }
+
+    Alert.alert(
+      t.deleteWorkout,
+      t.areYouSureYouWantToDeleteThisWorkoutProgram,
+      [
+        {
+          text: t.cancel,
+          style: "cancel"
+        },
+        {
+          text: t.delete,
+          onPress: async () => {
+            try {
+              await workoutsService.deleteProgram(programId);
+              setPrograms(programs.filter(p => p.id !== programId));
+            } catch (error) {
+              console.error('Error deleting program:', error);
+              Alert.alert(t.error, t.failedToDeleteWorkoutProgram);
+            }
+          },
+          style: 'destructive'
+        }
+      ]
+    );
   };
 
   const renderProgramCard = (program: Program, index: number) => {
@@ -78,8 +108,12 @@ export default function WorkoutsScreen() {
         key={program.id}
       >
         <TouchableOpacity
-          style={styles.cardContainer}
+          style={[styles.cardContainer, isDarkMode ? styles.darkItem : styles.lightItem]}
           onPress={() => {
+            if (!auth.currentUser) {
+              router.replace('/');
+              return;
+            }
             router.push({
               pathname: '/tabs/workouts/details',
               params: { id: program.id }
@@ -103,12 +137,12 @@ export default function WorkoutsScreen() {
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{program.name}</Text>
                 <Text style={styles.cardDescription}>
-                  {program.days?.length || 0} days
+                  {program.days?.length || 0} {t.days}
                 </Text>
               </View>
               <TouchableOpacity 
                 style={styles.deleteButton}
-                onPress={() => program.id && deleteProgram(program.id)}
+                onPress={() => deleteProgram(program.id!)}
               >
                 <FontAwesome5 name="trash-alt" size={18} color="#FF4B4B" />
               </TouchableOpacity>
@@ -133,7 +167,7 @@ export default function WorkoutsScreen() {
           end={{ x: 1, y: 1 }}
         >
           <FontAwesome5 name="plus" size={20} color="#FFFFFF" />
-          <Text style={styles.createButtonText}>Create Program</Text>
+          <Text style={styles.createButtonText}>{t.createProgram}</Text>
         </LinearGradient>
       </TouchableOpacity>
 
@@ -148,16 +182,16 @@ export default function WorkoutsScreen() {
           end={{ x: 1, y: 1 }}
         >
           <FontAwesome5 name="robot" size={20} color="#FFFFFF" />
-          <Text style={styles.createButtonText}>AI Generator</Text>
+          <Text style={styles.createButtonText}>{t.aiGenerator}</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isDarkMode ? styles.darkMode : styles.lightMode]}>
       <LinearGradient
-        colors={['#000000', '#000000']}
+        colors={isDarkMode ? ['#1a1a1a', '#2a2a2a'] : ['#ffffff', '#f5f5f5']}
         style={styles.background}
       >
         <Stack.Screen
@@ -175,30 +209,45 @@ export default function WorkoutsScreen() {
               style={styles.backButton}
               onPress={() => router.push('/tabs/home')}
             >
-              <FontAwesome5 name="arrow-left" size={20} color="#FFFFFF" />
+              <FontAwesome5 name="arrow-left" size={20} color={isDarkMode ? "white" : "black"} />
             </TouchableOpacity>
-            <Text style={styles.title}>Workouts</Text>
+            <Text style={[styles.title, isDarkMode ? styles.textLight : styles.textDark]}>{t.workouts}</Text>
           </View>
-          <Text style={styles.subtitle}>Create and manage your workout programs</Text>
+          <Text style={[styles.subtitle, isDarkMode ? styles.textLightSecondary : styles.textDarkSecondary]}>
+            {t.createAndManageYourWorkoutPrograms}
+          </Text>
 
           {renderCreateSection()}
           
           {loading ? (
             <View style={styles.emptyState}>
-              <FontAwesome5 name="dumbbell" size={50} color="#666" />
-              <Text style={styles.emptyStateText}>Loading...</Text>
+              <FontAwesome5 name="dumbbell" size={50} color={isDarkMode ? "#999" : "#666"} />
+              <Text style={[styles.emptyStateText, isDarkMode ? styles.textLight : styles.textDark]}>
+                {t.loading}
+              </Text>
+            </View>
+          ) : error ? (
+            <View style={styles.emptyState}>
+              <FontAwesome5 name="dumbbell" size={50} color={isDarkMode ? "#999" : "#666"} />
+              <Text style={[styles.emptyStateText, isDarkMode ? styles.textLight : styles.textDark]}>
+                {error}
+              </Text>
             </View>
           ) : programs.length > 0 ? (
             <View style={styles.programsContainer}>
-              <Text style={styles.sectionTitle}>Your Programs</Text>
+              <Text style={[styles.sectionTitle, isDarkMode ? styles.textLight : styles.textDark]}>
+                {t.yourPrograms}
+              </Text>
               {programs.map((program, index) => renderProgramCard(program, index))}
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <FontAwesome5 name="dumbbell" size={50} color="#666" />
-              <Text style={styles.emptyStateText}>No programs yet</Text>
-              <Text style={styles.emptyStateSubtext}>
-                Create your first workout program or let AI generate one for you
+              <FontAwesome5 name="dumbbell" size={50} color={isDarkMode ? "#999" : "#666"} />
+              <Text style={[styles.emptyStateText, isDarkMode ? styles.textLight : styles.textDark]}>
+                {t.noProgramsYet}
+              </Text>
+              <Text style={[styles.emptyStateSubtext, isDarkMode ? styles.textLightSecondary : styles.textDarkSecondary]}>
+                {t.createYourFirstWorkoutProgramOrLetAIGenerateOneForYou}
               </Text>
             </View>
           )}
@@ -211,53 +260,52 @@ export default function WorkoutsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   background: {
     flex: 1,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-  },
-  backButton: {
-    marginTop: 20,
+    padding: 20,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
     marginBottom: 10,
+  },
+  backButton: {
+    padding: 10,
+    marginRight: 10,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginLeft: 15,
   },
   subtitle: {
     fontSize: 16,
-    color: '#999999',
     marginBottom: 30,
-    marginTop: 10,
   },
   createSection: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
+    justifyContent: 'space-between',
+    marginBottom: 30,
   },
   createButton: {
     flex: 1,
-    borderRadius: 16,
+    marginHorizontal: 5,
+    borderRadius: 12,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   createButtonGradient: {
     flexDirection: 'row',
@@ -267,56 +315,52 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   createButtonText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
   programsContainer: {
-    gap: 16,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 15,
+    flex: 1,
   },
   cardContainer: {
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
+    marginBottom: 15,
+    borderRadius: 12,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   card: {
-    borderRadius: 16,
-    overflow: 'hidden',
+    borderRadius: 12,
   },
   cardInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+    padding: 15,
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   cardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     flex: 1,
+    marginLeft: 15,
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 4,
   },
@@ -325,33 +369,57 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
   },
   deleteButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 10,
+    marginRight: 5,
   },
   chevron: {
-    marginLeft: 10,
+    opacity: 0.8,
   },
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-    marginTop: 50,
+    paddingVertical: 50,
   },
   emptyStateText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#666',
     marginTop: 20,
+    textAlign: 'center',
   },
   emptyStateSubtext: {
     fontSize: 16,
-    color: '#888',
     textAlign: 'center',
     marginTop: 10,
+    maxWidth: '80%',
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  darkMode: {
+    backgroundColor: '#1a1a1a',
+  },
+  lightMode: {
+    backgroundColor: '#ffffff',
+  },
+  darkItem: {
+    backgroundColor: '#2a2a2a',
+  },
+  lightItem: {
+    backgroundColor: '#f5f5f5',
+  },
+  textLight: {
+    color: 'white',
+  },
+  textDark: {
+    color: 'black',
+  },
+  textLightSecondary: {
+    color: '#999',
+  },
+  textDarkSecondary: {
+    color: '#666',
   },
 });
