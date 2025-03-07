@@ -2,6 +2,7 @@
 # React Native Stack Base
 
 .expo
+expo-env.d.ts
 __generated__
 
 ### ReactNative.Node Stack ###
