@@ -42,30 +42,28 @@ export default function CreateWorkout() {
         return;
       }
 
-      // More detailed validation
+      // Validate exercises
       const invalidExercises = exercises.filter(ex => 
         !ex.name.trim() || 
-        typeof ex.sets !== 'number' || 
-        ex.sets <= 0 ||
-        typeof ex.reps !== 'number' || 
-        ex.reps <= 0 ||
+        !ex.sets ||
+        !ex.reps ||
         !ex.description?.trim()
       );
 
       if (invalidExercises.length > 0) {
-        Alert.alert('Error', 'Please ensure all exercises have a name, description, and valid numbers for sets and reps (greater than 0)');
+        Alert.alert('Error', 'Please fill in all exercise fields');
         return;
       }
 
       const programData = {
-        name: programName,
+        name: programName.trim(),
         days: [
           {
             day: 1,
             exercises: exercises.map(ex => ({
               name: ex.name.trim(),
-              sets: ex.sets,
-              reps: ex.reps,
+              sets: Number(ex.sets),
+              reps: Number(ex.reps),
               description: ex.description.trim(),
               weight: 0
             })),
@@ -74,11 +72,11 @@ export default function CreateWorkout() {
         ],
         type: 'custom' as const,
         createdAt: new Date().toISOString(),
-        currentDay: 1,
-        lastWorkout: undefined
+        currentDay: 1
       };
 
       await workoutsService.createProgram(programData);
+      Alert.alert('Success', 'Workout program saved successfully');
 
       router.push({
         pathname: '/tabs/workouts',

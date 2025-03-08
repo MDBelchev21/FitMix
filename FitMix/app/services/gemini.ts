@@ -2,6 +2,25 @@ import { geminiConfig } from '../config/gemini';
 import { WorkoutDay } from './workouts';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+export type MealType = 'high-protein' | 'low-carb' | 'high-carb' | 'balanced' | 'keto' | 'vegetarian';
+
+export interface MealSuggestion {
+  name: string;
+  ingredients: Array<{
+    item: string;
+    amount: string;
+  }>;
+  instructions: string[];
+  nutritionalBenefits: string[];
+  macros: {
+    calories: string;
+    protein: string;
+    carbs: string;
+    fats: string;
+  };
+  tags: string[];
+}
+
 export const geminiService = {
   async initializeClient() {
     const apiKey = await geminiConfig.getApiKey();
@@ -104,11 +123,11 @@ Respond ONLY with the JSON array, no additional text or formatting.`;
     }
   },
 
-  async generateMealSuggestion(ingredients: string) {
+  async generateMealSuggestion(mealType: MealType) {
     const genAI = await this.initializeClient();
     const model = genAI.getGenerativeModel({ model: geminiConfig.model });
     
-    const prompt = `Generate a healthy meal recipe using the following ingredients: ${ingredients}.
+    const prompt = `Generate a healthy ${mealType} meal recipe.
 Return ONLY a valid JSON object with this structure:
 {
   "name": "Name of the dish",
@@ -126,14 +145,23 @@ Return ONLY a valid JSON object with this structure:
   ],
   "macros": {
     "calories": "Approximate calories per serving",
-    "protein": "Protein content",
-    "carbs": "Carbohydrate content",
-    "fats": "Fat content"
-  }
+    "protein": "Protein content in grams",
+    "carbs": "Carbohydrate content in grams",
+    "fats": "Fat content in grams"
+  },
+  "tags": [
+    "List of relevant tags (e.g., 'High Protein', 'Low Carb', 'Quick', 'Easy')"
+  ]
 }
 
-Ensure all ingredients from the input are used if possible.
-Focus on healthy cooking methods and nutritional balance.
+Focus on:
+- For high-protein: lean meats, eggs, legumes
+- For low-carb: vegetables, proteins, healthy fats
+- For high-carb: whole grains, fruits, legumes
+- For balanced: mix of proteins, carbs, and healthy fats
+- For keto: high fat, very low carb, moderate protein
+- For vegetarian: plant-based proteins, whole grains, vegetables
+
 Keep instructions clear and concise.
 Respond ONLY with the JSON object, no additional text.`;
 

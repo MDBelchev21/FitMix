@@ -83,7 +83,33 @@ export const translations = {
     generateProgram: "Generate Program",
     generatingProgram: "Generating...",
     failedToGenerateProgram: "Failed to generate workout program. Please try again.",
-    program: "Program"
+    program: "Program",
+    nutritionScreen: {
+      title: "Smart Meal Planner",
+      selectMealType: "Select Meal Type",
+      generateMeal: "Generate Meal",
+      generating: "Generating your meal...",
+      ingredients: "Ingredients",
+      instructions: "Instructions",
+      benefits: "Health Benefits",
+      tryAgain: "Try Another Meal",
+      error: "Error",
+      updateFailed: "Failed to generate meal. Please try again.",
+      macros: {
+        calories: "Calories",
+        protein: "Protein",
+        carbs: "Carbs",
+        fats: "Fats"
+      },
+      mealTypes: {
+        "high-protein": "High Protein",
+        "low-carb": "Low Carb",
+        "high-carb": "High Carb",
+        "balanced": "Balanced",
+        "keto": "Keto",
+        "vegetarian": "Vegetarian"
+      }
+    }
   },
   bg: {
     welcome: "Добре дошли",
@@ -169,6 +195,32 @@ export const translations = {
     generateProgram: "Генерирай Програма",
     generatingProgram: "Генериране...",
     failedToGenerateProgram: "Неуспешно генериране на тренировъчна програма. Моля, опитайте отново.",
-    program: "Програма"
+    program: "Програма",
+    nutritionScreen: {
+      title: "Умен Планировчик на Хранене",
+      selectMealType: "Изберете Тип Ястие",
+      generateMeal: "Генерирай Ястие",
+      generating: "Генериране на ястие...",
+      ingredients: "Съставки",
+      instructions: "Инструкции",
+      benefits: "Здравословни Ползи",
+      tryAgain: "Генерирай Друго",
+      error: "Грешка",
+      updateFailed: "Неуспешно генериране на ястие. Моля, опитайте отново.",
+      macros: {
+        calories: "Калории",
+        protein: "Протеини",
+        carbs: "Въглехидрати",
+        fats: "Мазнини"
+      },
+      mealTypes: {
+        "high-protein": "Високо Протеинов",
+        "low-carb": "Нисковъглехидратен",
+        "high-carb": "Високовъглехидратен",
+        "balanced": "Балансиран",
+        "keto": "Кето",
+        "vegetarian": "Вегетариански"
+      }
+    }
   }
 };
